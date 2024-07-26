@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>大数据航班信息查询系统</title>
+    <link rel="stylesheet" type="text/css" href="./css/bootstrap.css"/>
+    <script src="./js/bootstrap.js" type="text/javascript" charset="utf-8"></script>
+    <script src="./js/axios.min.js" type="text/javascript" charset="utf-8"></script>
+    <script src="./js/vue.min.js" type="text/javascript" charset="utf-8"></script>
+    <script src="https://cdn.jsdelivr.net/npm/echarts/dist/echarts.min.js"></script>
+    
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            overflow: auto;
+            display: flex;
+            flex-direction: column;
+        }
+        .navbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background-color: black;
+            transition: top 0.3s;
+            z-index: 1000;
+        }
+        .hidden-navbar {
+            top: -50px;
+        }
+        .content {
+            flex: 1;
+            overflow: auto;
+            padding: 20px;
+            box-sizing: border-box;
+            margin-top: 50px;
+        }
+        .container {
+            margin-bottom: 20px;
+            padding: 10px;
+            background-color: white;
+            border: 2px solid #ffffff;
+            border-radius: 10px;
+        }
+        .container-1 {
+            height: 300px;
+            box-shadow: 2px 2px 10px rgba(85, 170, 255, 0.1);
+        }
+        .container-2 {
+            height: 200px;
+        }
+        .container-3 {
+            height: 300px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .rectangle {
+            width: 200px;
+            height: 200px;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            align-items: center;
+            color: #ffffff;
+            font-size: 24px;
+            font-weight: bold;
+            cursor: pointer;
+            border-radius: 10px;
+            box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.2);
+            overflow: hidden;
+            position: relative;
+            transition: transform 0.3s, z-index 0.3s;
+        }
+        .rectangle img {
+            width: auto;
+            height: 100%;
+            position: absolute;
+            top: 33.33%;
+            left: 50%;
+            transform: translateX(-50%);
+            border-bottom-left-radius: 10px;
+            border-bottom-right-radius: 10px;
+            transition: top 0.3s, width 0.3s;
+        }
+        .rectangle .text {
+            width: 100%;
+            height: 33.33%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border-top-left-radius: 10px;
+            border-top-right-radius: 10px;
+        }
+        .rectangle .text-1 {
+            background-color: rgba(0, 128, 188, 1);
+        }
+        .rectangle .text-2 {
+            background-color: rgba(0, 85, 127, 1);
+        }
+        .rectangle .text-3 {
+            background-color: rgba(0, 128, 188, 1);
+        }
+        .rectangle:hover {
+            transform: scale(1.5);
+            z-index: 100;
+        }
+        .rectangle:hover img {
+            top: 0;
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <nav id="navbar" class="navbar navbar-default">
+            <ul class="nav nav-tabs">
+                <li style="margin-left: 60px;" role="presentation">
+                    <a>大数据航班信息查询系统欢迎您</a>
+                </li>
+                <li role="presentation"><a href="homepage.html">首页</a></li>
+                <li role="presentation"><a href="showData.html">航班数据查询</a></li>
+                <li role="presentation" ><a href="register.html">注册</a></li>
+                <li role="presentation"><a href="login.html">登录</a></li>
+                <li style="float: right;margin-right: 100px;" role="presentation">
+                    <img src="./img/a.jpg" class="img-circle" width="50" height="50" @click="navigateTo('changePassword.html')">
+                </li>
+                <li style="float: right;margin-right: 20px;" role="presentation">
+                    <a href="#" @click="logout">退出登录</a>
+                </li>
+            </ul>
+        </nav>
+        <div class="content">
+            <div id="title-container" class="container container-1"></div>
+            <div id="animation-container" class="container container-2"></div>
+            <div id="function-container" class="container container-3">
+                <div class="rectangle rectangle-1" @click="navigateTo('showData.html')">
+                    <div class="text text-1">记录查询</div>
+                    <img src="./img/homepage_FlightTable.jpg" alt="记录查询">
+                </div>
+                <div class="rectangle rectangle-2" @click="navigateTo('register.html')">
+                    <div class="text text-2">乘客注册</div>
+                    <img src="./img/homepage_register.jpg" alt="乘客注册">
+                </div>
+                <div class="rectangle rectangle-3" @click="navigateTo('login.html')">
+                    <div class="text text-3">乘客登录</div>
+                    <img src="./img/homepage_login.jpg" alt="乘客登录">
+                </div>
+				<div class="rectangle rectangle-3" @click="navigateTo('changePassword.html')">
+					<div class="text text-3">修改密码</div>
+					<img src="./img/homepage_code.jpg" alt="信息修改">
+				</div>
+
+            </div>
+        </div>
+    </div>
+    
+    <script type="text/javascript">
+        new Vue({
+            el: "#app",
+            data: {
+                headerurl: 'https://image.baidu.com/search/detail?ct=503316480&z=undefined&tn=baiduimagedetail&ipn=d&word=%E5%A4%B4%E5%83%8F&step_word=&lid=10625792483855668664&ie=utf-8&in=&cl=2&lm=-1&st=undefined&hd=undefined&latest=undefined&copyright=undefined&cs=4072472313,1499772933&os=4027394630,83978332&simid=4072472313,1499772933&pn=3&rn=1&di=46137345&ln=1670&fr=&fmq=1721351456482_R&fm=&ic=undefined&s=undefined&se=&sme=&tab=0&width=undefined&height=undefined&face=undefined&is=0,0&istype=0&ist=&jit=&bdtype=11&spn=0&pi=0&gsm=1e&objurl=https%3A%2F%2Fq1.itc.cn%2Fq_70%2Fimages03%2F20240609%2F1c1be14298be4dbe978e55bde6e958b0.jpeg&rpstart=0&rpnum=0&adpicid=0&nojc=undefined&dyTabStr=MCwzLDEsMiw1LDgsNyw2LDQsOQ%3D%3D',
+                titleOption: {
+                    graphic: {
+                        elements: [
+                            {
+                                type: 'text',
+                                left: 'center',
+                                top: 'center',
+                                style: {
+                                    text: '大数据航班信息查询',
+                                    fontSize: 100,
+                                    fontWeight: 'bold',
+                                    lineDash: [0, 200],
+                                    lineDashOffset: 0,
+                                    fill: 'transparent',
+                                    stroke: '#000',
+                                    lineWidth: 1
+                                },
+                                keyframeAnimation: {
+                                    duration: 3000,
+                                    loop: true,
+                                    keyframes: [
+                                        {
+                                            percent: 0.7,
+                                            style: {
+                                                fill: 'transparent',
+                                                lineDashOffset: 200,
+                                                lineDash: [200, 0]
+                                            }
+                                        },
+                                        {
+                                            percent: 0.8,
+                                            style: {
+                                                fill: 'transparent'
+                                            }
+                                        },
+                                        {
+                                            percent: 1,
+                                            style: {
+                                                fill: '#000'
+                                            }
+                                        }
+                                    ]
+                                }
+                            }
+                        ]
+                    }
+                },
+
+                animationOption: {
+                    graphic: {
+                        elements: [
+                            {
+                                type: 'group',
+                                left: 'center',
+                                top: 'center',
+                                children: new Array(25).fill(0).map((val, i) => ({
+                                    type: 'rect',
+                                    x: i * 50,
+                                    shape: {
+                                        x: 0,
+                                        y: -40,
+                                        width: 20,
+                                        height: 50
+                                    },
+                                    style: {
+                                        fill: '#55aaff'
+                                    },
+                                    keyframeAnimation: {
+                                        duration: 1000,
+                                        delay: i * 200,
+                                        loop: true,
+                                        keyframes: [
+                                            {
+                                                percent: 0.5,
+                                                scaleY: 0.3,
+                                                easing: 'cubicIn'
+                                            },
+                                            {
+                                                percent: 1,
+                                                scaleY: 1,
+                                                easing: 'cubicOut'
+                                            }
+                                        ]
+                                    }
+                                }))
+                            }
+                        ]
+                    }
+                }
+            },
+            methods: {
+                navigateTo(url) {
+                    window.location.href = url;
+                },
+                logout() {
+                    sessionStorage.removeItem("username");
+                    window.location.href = "./login.html";
+                }
+            },
+            mounted() {
+                var titleChart = echarts.init(document.getElementById('title-container'));
+                var animationChart = echarts.init(document.getElementById('animation-container'));
+                
+                titleChart.setOption(this.titleOption);
+                animationChart.setOption(this.animationOption);
+                
+                var lastScrollTop = 0;
+                var navbar = document.getElementById('navbar');
+                window.addEventListener('scroll', function() {
+                    var scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+                    if (scrollTop > lastScrollTop) {
+                        navbar.classList.add('hidden-navbar');
+                    } else {
+                        navbar.classList.remove('hidden-navbar');
+                    }
+                    lastScrollTop = scrollTop <= 0 ? 0 : scrollTop;
+                }, false);
+
+                document.addEventListener('mousemove', function(e) {
+                    if (e.clientY < 50) {
+                        navbar.classList.remove('hidden-navbar');
+                    }
+                });
+            }
+        })
+    </script>
+</body>
+</html>

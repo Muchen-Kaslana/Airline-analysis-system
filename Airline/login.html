@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>大数据航班信息查询系统</title>
+	<link rel="stylesheet" type="text/css" href="./css/bootstrap.css"/>
+	<script src="./js/bootstrap.js" type="text/javascript" charset="utf-8"></script>
+	<script src="./js/axios.min.js" type="text/javascript" charset="utf-8"></script>
+	<script src="./js/vue.min.js" type="text/javascript" charset="utf-8"></script>
+	<style>
+		body {
+			background: url('./img/background.webp') no-repeat center center fixed; 
+			background-size: cover;
+			display: flex;
+			justify-content: center;
+			align-items: center;
+			height: 100vh;
+			margin: 0;
+			font-family: 'Arial', sans-serif;
+			flex-direction: column;
+		}
+		#app {
+			background-color: rgba(255, 255, 255, 0.85);
+			padding: 40px;
+			border-radius: 10px;
+			box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+			width: 100%;
+			max-width: 400px;
+			text-align: center;
+		}
+		.navbar {
+			margin-bottom: 20px;
+			background-color: #34495e;
+			border-radius: 0;
+			border: none;
+		}
+		.navbar-default .navbar-nav>li>a {
+			color: #ecf0f1;
+			padding: 10px 20px;
+			margin: 0 10px;
+		}
+		.navbar-default .navbar-nav>li>a:hover {
+			color: #bdc3c7;
+			background-color: #2980b9;
+			border-radius: 5px;
+		}
+		.navbar-default .navbar-brand {
+			color: #ecf0f1;
+			font-size: 18px;
+			font-weight: bold;
+		}
+		.navbar-default .navbar-brand:hover {
+			color: #bdc3c7;
+		}
+		.navbar-header {
+			display: flex;
+			justify-content: center;
+			align-items: center;
+			width: 100%;
+		}
+		.form-group {
+			margin-bottom: 20px;
+			text-align: left;
+		}
+		.form-control {
+			border-radius: 0;
+			box-shadow: none;
+			border-color: #dcdcdc;
+		}
+		.btn-default {
+			background-color: #2980b9;
+			color: white;
+			border: none;
+			width: 100%;
+			padding: 10px;
+			font-size: 16px;
+			border-radius: 0;
+		}
+		.btn-default:hover {
+			background-color: #3498db;
+		}
+		.img-circle {
+			border: 2px solid #ffffff;
+		}
+		.header-title {
+			font-size: 24px;
+			font-weight: bold;
+			color: #34495e;
+			margin-bottom: 20px;
+			text-align: center;
+		}
+	</style>
+</head>
+<body>
+	<div id="app">
+		<nav class="navbar navbar-default">
+			<div class="container-fluid">
+				<div class="navbar-header">
+					<a class="navbar-brand" href="#">大数据航班信息查询系统</a>
+				</div>
+				<ul class="nav navbar-nav">
+					<li role="presentation"><a href="homePage.html">首页</a></li>
+					<li role="presentation"><a href="register.html">注册</a></li>
+					<li role="presentation" class="active"><a href="login.html">登录</a></li>
+				</ul>
+			</div>
+		</nav>
+		<form class="form-horizontal" role="form">
+			<div class="form-group">
+				<label for="firstname1" class="control-label">用户名</label>
+				<input type="text" v-model="userName" class="form-control" id="firstname1" placeholder="请输入用户名">
+			</div>
+			<div class="form-group">
+				<label for="firstname2" class="control-label">密码</label>
+				<input type="password" v-model="password" class="form-control" id="firstname2" placeholder="请输入密码">
+			</div>
+			<div class="form-group">
+				<button @click="login" type="button" class="btn btn-default">登录</button>
+			</div>
+		</form>
+	</div>
+	<script type="text/javascript">
+		new Vue({
+			el: "#app",
+			data: {
+				userName: "",
+				password: ""
+			},
+			methods: {
+				login() {
+					let param = new FormData();
+					param.append("username", this.userName);
+					param.append("password", this.password);
+					axios.post("http://127.0.0.1/login", param)
+					.then(response => {
+						let resultTo = response.data;
+						let msg = resultTo.msg;
+						if (msg === '登录成功') {
+							let userName = resultTo.value.user_username;
+							sessionStorage.setItem("username", userName);
+							window.location.href = "./homePage.html";
+						} else if (msg === '登录失败') {
+							alert("登录失败");
+						}
+					});
+				}
+			}
+		});
+	</script>
+</body>
+</html>

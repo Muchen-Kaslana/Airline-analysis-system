@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>大数据航班信息查询系统</title>
+    <link rel="stylesheet" type="text/css" href="./css/bootstrap.css"/>
+    <script src="./js/bootstrap.js" type="text/javascript" charset="utf-8"></script>
+    <script src="./js/axios.min.js" type="text/javascript" charset="utf-8"></script>
+    <script src="./js/vue.min.js" type="text/javascript" charset="utf-8"></script>
+    <script src="https://cdn.jsdelivr.net/npm/echarts/dist/echarts.min.js"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            overflow: auto;
+            display: flex;
+            flex-direction: column;
+			background-image: url('./img/background_plane.jpg'); /* 设置背景图片 */
+			background-size: cover; /* 确保背景图片覆盖整个页面 */
+			background-position: auto; /* 将背景图片居中 */
+			background-repeat: no-repeat; /* 不重复背景图片 */
+			background-attachment: fixed; /* 固定背景图片 */
+			
+        }
+        .navbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background-color: black;
+            transition: top 0.3s;
+            z-index: 1000;
+        }
+        .hidden-navbar {
+            top: -50px;
+        }
+        .sidebar {
+            position: fixed;
+            top: 0;
+            left: -250px;
+            width: 250px;
+            height: 100%;
+            background-color: #0078b0;
+            padding-top: 60px;
+            z-index: 999;
+            overflow-x: hidden;
+            transition: 0.3s;
+        }
+        .sidebar a {
+            padding: 10px 15px;
+            text-decoration: none;
+            font-size: 25px;
+            color: white;
+            display: block;
+            transition: 0.3s;
+        }
+        .sidebar a:hover {
+            background-color: #575757;
+        }
+        .openbtn {
+            font-size: 20px;
+            cursor: pointer;
+            background-color: #333;
+            color: white;
+            border: none;
+            position: fixed;
+            top: 50%;
+            left: 0;
+            transform: translateY(-50%);
+            z-index: 1001;
+            width: 30px;
+            height: 60px;
+            text-align: center;
+            padding: 15px 0;
+            transition: left 0.3s;
+        }
+        .openbtn:hover {
+            background-color: #444;
+        }
+        .content {
+            margin-left: 0;
+            flex: 1;
+            overflow: auto;
+			overflow-y: auto; /* 支持上下滚动 */
+            padding: 20px;
+            box-sizing: border-box;
+            margin-top: 50px;
+            transition: margin-left 0.3s;
+        }
+        .container {
+            margin-bottom: 20px;
+            padding: 0;
+            background-color: white;
+            border: 2px solid #ffffff;
+            border-radius: 10px;
+        }
+        .form-container {
+            height: 100px;
+            box-shadow: 2px 2px 10px rgba(85, 170, 255, 0.1);
+        }
+        .sub-sidebar {
+            position: fixed;
+            top: 0;
+            left: -250px;
+            width: 300px;
+            height: 100%;
+            background-color: #0098df;
+            padding-top: 60px;
+            z-index: 998;
+            overflow-x: hidden;
+            transition: 0.3s;
+        }
+        .sub-sidebar a {
+            padding: 10px 15px;
+            text-decoration: none;
+            font-size: 20px;
+            color: white;
+            display: block;
+            transition: 0.3s;
+        }
+        .sub-sidebar a:hover {
+            background-color: #0090d3;
+        }
+		.fade-enter-active, .fade-leave-active {
+		    transition: opacity 0.5s;
+		}
+		.fade-enter, .fade-leave-to /* .fade-leave-active in <2.1.8 */ {
+		    opacity: 0;
+		}
+		#chartContainer1 {
+            display: none; /* 初始状态隐藏 */
+			padding:0;
+            margin-top: 10px;
+			background-color: white;
+			 border-radius: 10px;
+			 transition: 0.3s;
+        }
+		#chartContainer1_1 {/*不能写成1.1*/
+		    display: none; /* 初始状态隐藏 */
+			padding:0;
+		    margin-top: 20px;
+			background-color: white;
+			 border-radius: 10px;
+			 transition: 0.3s;
+		}
+		#chartContainer2 {/*不能写成1.1*/
+		    display: none; /* 初始状态隐藏 */
+			padding:0;
+		    margin-top: 20px;
+			background-color: white;
+			 border-radius: 10px;
+			 transition: 0.3s;
+		}
+		 
+    </style>
+</head>
+<body>
+    <div id="app">
+		
+        <button class="openbtn" @click="toggleSidebar">☰</button>
+        <div id="mySidebar" class="sidebar">
+            <a href="javascript:void(0)" @click="showForm('flightInfo')">航班信息查询</a>
+            <a href="javascript:void(0)" @click="showForm('flightRoute')">航班查询路线</a>
+            <!--a href="javascript:void(0)" @click="showForm('routeFlight')">路线查询航班</a-->
+		</div>
+        
+        <div id="subSidebar1" class="sub-sidebar" :style="{ left: subSidebarOpen1 ? '250px' : '-300px' }">
+            <transition name="fade">
+			<div class="form-container" v-if="activeForm === 'flightInfo'">
+                <form class="form-horizontal" role="form">
+                    <div class="form-group">
+                        <label for="flightID" class="col-sm-4 control-label">航班号 FlightID</label>
+                        <div class="col-sm-8">
+                            <input type="text" v-model="flightID" class="form-control" id="flightID" placeholder="请输入航班号">
+                        </div>
+                    </div>
+					
+                    <div class="form-group">
+                        <div class="col-sm-offset-4 col-sm-8">
+                            <button @click="showChart1" type="button" class="btn btn-default">开始查询</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+			</transition>
+			
+        </div>
+		
+		<div id="subSidebar2" class="sub-sidebar" :style="{ left: subSidebarOpen2 ? '250px' : '-300px' }">
+		    <transition name="fade">
+			<div class="form-container" v-if="activeForm === 'flightRoute'">
+		        <form class="form-horizontal" role="form">
+		            <div class="form-group">
+		                <label for="startDate" class="col-sm-4 control-label">航班号 FlightID</label>
+		                <div class="col-sm-8">
+		                    <input type="text" v-model="flightID" class="form-control" id="flightID" placeholder="请输入航班号">
+		                </div>
+						
+		            </div>
+		           
+				   <div class="form-group">
+				       <label for="startDate" class="col-sm-4 control-label">起飞日期 FlightID</label>
+				       <div class="col-sm-8">
+				           <input type="text" v-model="flightDate" class="form-control" id="flightDate" placeholder="请输入起飞日期">
+				       </div>
+				   	
+				   </div>
+				   
+		            <div class="form-group">
+		                <div class="col-sm-offset-4 col-sm-8">
+		                    <button @click="showChart2" type="button" class="btn btn-default">开始查询</button>
+		                </div>
+		            </div>
+		        </form>
+		    </div>
+			</transition>
+		</div>
+		
+
+       <nav id="navbar" class="navbar navbar-default">
+           <ul class="nav nav-tabs">
+               <li style="margin-left: 60px;" role="presentation">
+                   <a>大数据航班信息查询系统欢迎您</a>    
+               </li>
+               <li role="presentation"><a href="homePage.html">首页</a></li>
+               <li role="presentation"><a href="showData.html">航班数据查询</a></li>
+               <li role="presentation"><a href="register.html">注册</a></li>
+               <li role="presentation"><a href="login.html">登录</a></li>
+               <li style="float: right;margin-right: 100px;" role="presentation">
+                    <img src="./img/a.jpg" class="img-circle" width="50" height="50" @click="navigateTo('changePassword.html')">
+       		</li>
+       		
+           </ul>
+       </nav>
+
+        <div class="content">
+            <div id="chartContainer1" style="width: 100%;height:800px;">
+                
+            </div>
+			<div id="chartContainer1_1" style="width: 100%;height:800px;">
+			</div>
+			<div id="chartContainer2" style="width: 100%;height:800px;">
+			</div>
+			
+        </div>
+    </div>
+
+  
+				 
+    <script type="text/javascript">
+        new Vue({
+            el: "#app",
+            data: {
+				flightDate:null,
+				flightID: null,
+				departure: null,
+				arrival: null,
+				departureDate: null,
+				activeForm: null,
+				sidebarOpen: false,
+				subSidebarOpen1: false,
+				subSidebarOpen2: false,
+				subSidebarOpen3: false,
+				flightDistance:null,
+				
+					
+                option1: {
+					
+                    xAxis: [
+                        { gridIndex: 0, data: [] ,
+						 axisLabel: {
+							interval: 0, // 强制显示所有标签
+							rotate: 45, // 旋转标签防止重叠
+							formatter: function(value) {
+								return value.split(' ')[0]; // 只显示日期部分
+							}
+						},
+						axisTick: {
+							alignWithLabel: true
+						}
+						},
+                        { gridIndex: 1, data: [] ,
+						axisLabel: {
+							interval: 0, // 强制显示所有标签
+							rotate: 45, // 旋转标签防止重叠
+							formatter: function(value) {
+								return value.split(' ')[0]; // 只显示日期部分
+							}
+						},
+						axisTick: {
+							alignWithLabel: true
+						}
+						}
+                    ],
+                    yAxis: [
+                        { scale: true, gridIndex: 0 },
+                        { scale: true, gridIndex: 1 },
+						
+                    ],
+                    grid: [
+                        { left: 20, right: 20, top: 110, height: 300, containLabel: true, backgroundColor: '#000' },
+                        { left: 35, right: 20, height: 140, top: '60%' }
+                    ],
+                    legend: {
+                        data: ['乘客数量', '准点率','准点率均值', '2次均线']
+                    },
+                    tooltip: {
+                        trigger: 'axis'
+                    },
+					dataZoom: [
+					    { type: 'inside' }
+					],
+                    series: [
+                        {name:"乘客数量",
+					  type: 'bar',
+					  showBackground: true,
+					  itemStyle: {
+						color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+						  { offset: 0, color: '#83bff6' },
+						  { offset: 0.5, color: '#188df0' },
+						  { offset: 1, color: '#188df0' }
+						])
+					  },
+					  
+					  emphasis: {
+						itemStyle: {
+						  color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+							{ offset: 0, color: '#2378f7' },
+							{ offset: 0.7, color: '#2378f7' },
+							{ offset: 1, color: '#83bff6' }
+						  ])
+						}
+					  },
+					  
+					  xAxisIndex: 0, yAxisIndex: 0,
+					  data: []
+					},
+                        { name: "准点率", type: 'line', xAxisIndex: 1, yAxisIndex: 1, data: [] },
+                        { name: "2次均线", type: 'line', xAxisIndex: 0, yAxisIndex: 0, data: [] },
+						{name:"准点率均值",type:'line',xAxisIndex: 1, yAxisIndex: 1, data: [] }
+                    ]
+                },
+				
+				option2:{
+			
+					  legend: {
+					    data: ['里程数']
+					  },
+					  tooltip: {
+					    trigger: 'axis',
+					    axisPointer: {
+					      type: 'shadow'
+					    }
+					  },
+					  
+					  grid:[ {
+					    containLabel: true,
+					    left: 20
+					  },
+					  ],
+					  
+					  yAxis: [{
+					    data: [],
+					    inverse: true,
+					    axisLine: { show: false },
+					    axisTick: { show: false ,alignWithLabel: true},
+					    axisLabel: {
+						interval: 0, // 强制显示所有标签
+							
+						formatter: function(value) {
+							return value.split(' ')[0]; // 只显示日期部分
+						},
+					      margin: 30,
+					      fontSize: 14
+					    },
+					    axisPointer: {
+					      label: {
+					        show: true,
+					        margin: 30
+					      }
+					    }
+					  },
+					  {
+						type: 'category',
+						data: [], 
+						alignTicks: true,
+						position: 'right',
+						axisLine: { show: false },
+						axisTick: { show: false },
+						axisLabel: {
+						  interval: 0, // 强制显示所有标签
+						  margin: 30,
+						  fontSize: 14
+						}
+					  }
+					  
+					  ],
+					  xAxis: [{
+					    splitLine: { show: false },
+					    axisLabel: { show: false },
+					    axisTick: { show: false },
+					    axisLine: { show: false }
+					  },
+					  ],
+					  series: [
+					    {
+					      name: '里程数',
+					      type: 'pictorialBar',
+						  
+					      label: {  // <-- 将labelSetting放在这里
+							  show: true,
+							  position: 'right',
+							  offset: [10, 0],
+							  fontSize: 16,
+							  },
+						  
+						  symbolRepeat: true,
+					      symbol: 'path://M1.112,32.559l2.998,1.205l-2.882,2.268l-2.215-0.012L1.112,32.559z M37.803,23.96 c0.158-0.838,0.5-1.509,0.961-1.904c-0.096-0.037-0.205-0.071-0.344-0.071c-0.777-0.005-2.068-0.009-3.047-0.009 c-0.633,0-1.217,0.066-1.754,0.18l2.199,1.804H37.803z M39.738,23.036c-0.111,0-0.377,0.325-0.537,0.924h1.076 C40.115,23.361,39.854,23.036,39.738,23.036z M39.934,39.867c-0.166,0-0.674,0.705-0.674,1.986s0.506,1.986,0.674,1.986 s0.672-0.705,0.672-1.986S40.102,39.867,39.934,39.867z M38.963,38.889c-0.098-0.038-0.209-0.07-0.348-0.073 c-0.082,0-0.174,0-0.268-0.001l-7.127,4.671c0.879,0.821,2.42,1.417,4.348,1.417c0.979,0,2.27-0.006,3.047-0.01 c0.139,0,0.25-0.034,0.348-0.072c-0.646-0.555-1.07-1.643-1.07-2.967C37.891,40.529,38.316,39.441,38.963,38.889z M32.713,23.96 l-12.37-10.116l-4.693-0.004c0,0,4,8.222,4.827,10.121H32.713z M59.311,32.374c-0.248,2.104-5.305,3.172-8.018,3.172H39.629 l-25.325,16.61L9.607,52.16c0,0,6.687-8.479,7.95-10.207c1.17-1.6,3.019-3.699,3.027-6.407h-2.138 c-5.839,0-13.816-3.789-18.472-5.583c-2.818-1.085-2.396-4.04-0.031-4.04h0.039l-3.299-11.371h3.617c0,0,4.352,5.696,5.846,7.5 c2,2.416,4.503,3.678,8.228,3.87h30.727c2.17,0,4.311,0.417,6.252,1.046c3.49,1.175,5.863,2.7,7.199,4.027 C59.145,31.584,59.352,32.025,59.311,32.374z M22.069,30.408c0-0.815-0.661-1.475-1.469-1.475c-0.812,0-1.471,0.66-1.471,1.475 s0.658,1.475,1.471,1.475C21.408,31.883,22.069,31.224,22.069,30.408z M27.06,30.408c0-0.815-0.656-1.478-1.466-1.478 c-0.812,0-1.471,0.662-1.471,1.478s0.658,1.477,1.471,1.477C26.404,31.885,27.06,31.224,27.06,30.408z M32.055,30.408 c0-0.815-0.66-1.475-1.469-1.475c-0.808,0-1.466,0.66-1.466,1.475s0.658,1.475,1.466,1.475 C31.398,31.883,32.055,31.224,32.055,30.408z M37.049,30.408c0-0.815-0.658-1.478-1.467-1.478c-0.812,0-1.469,0.662-1.469,1.478 s0.656,1.477,1.469,1.477C36.389,31.885,37.049,31.224,37.049,30.408z M42.039,30.408c0-0.815-0.656-1.478-1.465-1.478 c-0.811,0-1.469,0.662-1.469,1.478s0.658,1.477,1.469,1.477C41.383,31.885,42.039,31.224,42.039,30.408z M55.479,30.565 c-0.701-0.436-1.568-0.896-2.627-1.347c-0.613,0.289-1.551,0.476-2.73,0.476c-1.527,0-1.639,2.263,0.164,2.316 C52.389,32.074,54.627,31.373,55.479,30.565z'
+						  , // 统一使用飞机图片
+					      symbolSize: [25,30],
+					      barCategoryGap: '40%',
+					      data:[]
+					    }
+					  ]
+				},
+				
+            },
+			
+			
+           methods: {
+               loadFlightEchars1() {
+                   var chartDom = document.getElementById('chartContainer1');
+                   var myChart = echarts.init(chartDom);
+           
+                   let flightID = this.flightID;
+                   let departure = this.departure;
+                   let arrival = this.arrival;
+                   let departureDate = this.departureDate;
+           
+                   axios.get(`http://127.0.0.1/getFlights?flightnumber=${flightID}&pageNow=1`)
+                       .then(response => {
+						   
+						   if (response.data.length === 0) {
+							   alert('航班号无效'); // 显示简单的 alert 弹窗
+							   return;
+						   }
+										
+							let avg=[];
+							 let sum=0;			   
+                           let xdata = [];  // x轴的日期数据 三个grid 
+                           let customerdata = [];
+                           let on_time_rate = [];
+						   
+                           // 均线数据赋值
+                           let mv2 = [];
+						  
+           
+                           let jsonarr = response.data;
+                           for (let i = 0; i < jsonarr.length; i++) {
+                               let json = jsonarr[i];
+                               // 想办法给均线（mv5）赋值
+                               // 计算2次均线
+							   
+                               sum+=parseFloat(json.flight_on_time_rate);
+							   
+                               if (i >= 2) {
+                                   let start = i - 1;
+                                   let sum_close_2 = 0;
+                                   for (let index = start; index <= i; index++) {
+                                       let jsonObject = jsonarr[index];
+                                       sum_close_2 += parseInt(jsonObject.flight_passenger_count);
+                                   }
+                                   mv2.push(sum_close_2 / 2);
+                               } else {
+                                   mv2.push(null);
+                               }
+           
+                               // 给三个x轴时间线赋值
+                               xdata.push(json.flight_date);
+                               customerdata.push(parseInt(json.flight_passenger_count));
+							   on_time_rate.push(parseFloat(json.flight_on_time_rate));
+							   
+                           }
+           
+		                avgrate=sum/jsonarr.length;
+						
+		                  for (let i = 0; i < jsonarr.length; i++) {
+							  avg.push(avgrate);
+							  }
+							  
+							  
+						 this.option1.title = [
+						   { text: '乘客数量', left: 'left', top: 10 },
+						   { text: '准点率', left: 'left', top: '55%' }
+					   ];
+                           
+						   this.option1.xAxis[0].data = xdata;
+                           this.option1.xAxis[1].data = xdata;
+           
+                           this.option1.series[0].data = customerdata;
+                           this.option1.series[1].data = on_time_rate;
+						   this.option1.series[2].data = mv2;
+						   this.option1.series[3].data = avg;
+						   
+                           myChart.setOption(this.option1);
+						   
+						   const zoomSize = 20;
+						   myChart.on('click', function (params) {
+							   myChart.dispatchAction({
+								   type: 'dataZoom',
+								   startValue: xdata[Math.max(params.dataIndex - zoomSize / 2, 0)],
+								   endValue: xdata[Math.min(params.dataIndex + zoomSize / 2, xdata.length - 1)]
+							   });
+						   });
+						   
+                       })
+                       .catch(error => {
+                           console.error('Error fetching data:', error);
+                       });
+               },
+			   
+			  loadFlightEchars2() {
+			      var chartDom = document.getElementById('chartContainer1_1');
+			      var myChart = echarts.init(chartDom);
+			             
+			      let flightID = this.flightID;
+				  let flightDistance=this.flightDistance;
+				  let departure=this.departure;
+				  let arrival=this.arrival;
+			     
+			             
+			      axios.get(`http://127.0.0.1/getFlights?flightnumber=${flightID}&pageNow=1`)
+			          .then(response => {
+			  									   
+					  let ydata = [];  // y轴的日期数据  
+					  let miledata = [];//里程数
+					  let citydata=[];	
+					 
+					  let jsonarr = response.data;
+					 
+					  for (let i = 0; i < jsonarr.length; i++) {
+						  let json = jsonarr[i];
+						  // 想办法给均线（mv5）赋值
+						
+						  // 给三个x轴时间线赋值
+						  ydata.push(json.flight_date);
+						  miledata.push(parseInt(json.flight_flight_distance));
+						  citydata.push(
+						            json.flight_departure_city + ' 飞往 ' +
+						           json.flight_arrival_city
+						);
+						
+					  }
+					 
+					
+					 this.option2.title = [
+					   { text: '行驶里程数', left: 'left', top: 10 },
+				   ];
+				   
+	  
+				   this.option2.yAxis[0].data = ydata;
+				   this.option2.yAxis[1].data =citydata;
+					  this.option2.series[0].data = miledata;
+					  
+					 
+					  myChart.setOption(this.option2);
+								   
+								   
+				  })
+				  .catch(error => {
+					  console.error('Error fetching data:', error);
+				  });
+			  },
+           
+			
+			
+			loadFlightRoute2(){
+				var chartDom = document.getElementById('chartContainer2');
+				var myChart = echarts.init(chartDom);
+				 myChart.setOption(this.option3);
+				
+			},
+			
+               showChart1() {
+				   
+                   document.getElementById("chartContainer1").style.display = 'block';
+				   document.getElementById("chartContainer1_1").style.display = 'block';
+				   document.getElementById("chartContainer2").style.display = 'none';
+				  
+				 
+                   this.loadFlightEchars1();
+				   this.loadFlightEchars2();
+				   
+               },
+			   
+			   showChart2() {
+			        if (this.flightID && this.flightDate) {
+					   window.location.href = `route.html?flightnumber=${this.flightID}&date=${this.flightDate}`;
+				   } else {
+					   alert("请输入航班号和起飞日期");
+				   }
+				   
+				   document.getElementById("chartContainer1").style.display = 'none';
+				   document.getElementById("chartContainer1_1").style.display = 'none';
+				 
+				
+			       
+			   },
+			   
+			 
+
+               showForm(formName) {
+                   this.activeForm = formName;
+                   if (this.activeForm === "flightInfo") {
+                       this.subSidebarOpen1 = true;
+                       this.subSidebarOpen2 = false;
+					  
+                   } else if (this.activeForm === "flightRoute") {
+					   window.location.href = "./route.html";
+                       this.subSidebarOpen2 = true;
+                       this.subSidebarOpen1 = false;
+                      }
+					
+               },
+           
+               toggleSidebar() {
+                   this.sidebarOpen = !this.sidebarOpen;
+                   if (this.subSidebarOpen1 === true) {
+                       this.subSidebarOpen1 = !this.subSidebarOpen1;
+                   }
+                   if (this.subSidebarOpen2 === true) {
+                       this.subSidebarOpen2 = !this.subSidebarOpen2;
+                   }
+				  
+                   document.getElementById("mySidebar").style.left = this.sidebarOpen ? "0" : "-250px";
+               }
+           }
+        });
+		
+		
+    </script>
+	
+	
+</body>
+</html>

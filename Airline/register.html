@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title>注册页面</title>
+		<link rel="stylesheet" type="text/css" href="./css/bootstrap.css"/>
+		<script src="./js/jquery.js" type="text/javascript" charset="utf-8"></script>
+		<script src="./js/bootstrap.js" type="text/javascript" charset="utf-8"></script>
+		<script src="./js/axios.min.js" type="text/javascript" charset="utf-8"></script>
+		<script src="./js/vue.min.js" type="text/javascript" charset="utf-8"></script>
+		<style>
+			body {
+				background-image: url('./img/b.jpg');
+				background-size: cover;
+				display: flex;
+				justify-content: center;
+				align-items: center;
+				height: 100vh;
+				margin: 0;
+				font-family: 'Arial', sans-serif;
+			}
+			.container {
+				background-color: rgba(255, 255, 255, 0.95);
+				padding: 30px;
+				border-radius: 15px;
+				box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+				width: 50%;
+				font-family: 'Verdana', sans-serif;
+			}
+			.img-container {
+				text-align: center;
+				background-color: transparent;
+				border-radius: 10px;
+				padding: 10px;
+			}
+			.img-container img {
+				max-width: 100%;
+				width: 300px;
+				height: auto;
+				border-radius: 10px;
+			}
+			.btn-custom {
+				background-color: #5cb85c;
+				color: white;
+			}
+			.btn-custom:hover {
+				background-color: #4cae4c;
+			}
+			.btn-secondary {
+				background-color: #f0ad4e;
+				color: white;
+			}
+			.btn-secondary:hover {
+				background-color: #ec971f;
+			}
+			.welcome-message {
+				text-align: center;
+				font-size: 28px;
+				color: #1a73e8;
+				margin-bottom: 20px;
+				border: 2px solid #1a73e8;
+				padding: 15px;
+				border-radius: 10px;
+				font-family: 'Times New Roman', serif;
+			}
+			.form-title {
+				font-family: 'Georgia', serif;
+				color: #2c3e50;
+				text-align: center;
+				margin-bottom: 20px;
+			}
+			.form-label {
+				font-family: 'Helvetica', sans-serif;
+				color: #34495e;
+			}
+		</style>
+	</head>
+	<body>
+		<div id="app" class="container">
+			<div class="welcome-message">滨海国际机场欢迎您</div>
+			<div class="row">
+				<div class="col-md-6 img-container">
+					<img src="./img/flight.webp" alt="图片">
+				</div>
+				<div class="col-md-6">
+					<h2 class="form-title">注册页面</h2>
+					<form class="form-horizontal" role="form">
+						<div class="form-group">
+							<label for="firstname1" class="col-sm-4 control-label form-label">用户名</label>
+							<div class="col-sm-8">
+								<input type="text" v-model="userName" class="form-control" id="firstname1" placeholder="请输入用户名">
+							</div>
+						</div>
+						
+						<div class="form-group">
+							<label for="password1" class="col-sm-4 control-label form-label">密码</label>
+							<div class="col-sm-8">
+								<input type="password" v-model="password1" class="form-control" id="password1" placeholder="请输入密码">
+							</div>
+						</div>
+						
+						<div class="form-group">
+							<label for="password2" class="col-sm-4 control-label form-label">重复密码</label>
+							<div class="col-sm-8">
+								<input type="password" v-model="password2" class="form-control" id="password2" placeholder="请再次输入密码">
+							</div>
+						</div>
+						
+						<div class="form-group">
+							<label for="file" class="col-sm-4 control-label form-label">请选择头像上传</label>
+							<div class="col-sm-8">
+								<input type="file" class="form-control-file" id="file">
+							</div>
+						</div>
+						
+						<div class="form-group">
+							<label for="phone" class="col-sm-4 control-label form-label">手机号</label>
+							<div class="col-sm-8">
+								<input type="text" v-model="phone" class="form-control" id="phone" placeholder="请输入手机号">
+							</div>
+						</div>
+						
+						<div class="form-group text-center">
+							<button @click="register" type="button" class="btn btn-custom">完成注册</button>
+						</div>
+
+						<div class="form-group text-center">
+							<button onclick="window.location.href='homePage.html'" type="button" class="btn btn-secondary">返回首页</button>
+							<button onclick="window.location.href='login.html'" type="button" class="btn btn-secondary">返回登录界面</button>
+						</div>
+					</form>
+				</div>
+			</div>
+		</div>
+		
+		<script type="text/javascript">
+			new Vue({
+				el: "#app",
+				data: {
+					userName: "",
+					password1: "",
+					password2: "",
+					phone: ""
+				},
+				methods: {
+					register() {
+						if (this.userName != "" && this.password1 != "" && this.password2 != "") {
+							if (this.password1 == this.password2) {
+								var file = document.getElementById("file").files[0];
+								
+								let param = new FormData();
+								param.append("username", this.userName);
+								param.append("password", this.password1);
+								param.append("phone", this.phone);
+								param.append("file", file);
+								
+								var config = {
+								  headers: { 'Content-Type': 'multipart/form-data' }
+								};
+								
+								axios.post("http://127.0.0.1/register", param, config)
+								.then(response => {
+									if (response.data.usernameExists) {
+										alert("用户名已存在，请重新输入");
+									} else if (response.data.success) {
+										window.location.href = "./login.html";
+									}
+								});
+							} else {
+								alert("两次输入的密码不一致");
+							}
+						} else {
+							alert("用户名和密码不能为空");
+						}
+					}
+				}
+			});
+		</script>
+	</body>
+</html>
